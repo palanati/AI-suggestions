@@ -1,0 +1,30 @@
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Load user preferences 
+user_prefs = pd.read_csv('user_prefs.csv') 
+
+# Load item features
+items = pd.read_csv('items.csv')
+
+# Get a normalized matrix of item features
+item_features = items[['feature1', 'feature2', 'feature3']]
+item_features_normalized = item_features.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
+
+# Calculate similarity between each item pair
+item_sim = cosine_similarity(item_features_normalized) 
+
+def get_recommendations(user_id):
+  
+  # Get sorted item similarities to this user's preferred items
+  prefs = user_prefs[user_prefs['user_id'] == user_id]
+  prefs = prefs.merge(item_sim, left_on='item', right_index=True) 
+  prefs = prefs.sort_values('similarity', ascending=False)
+
+  # Get most similar items from user's prefs
+  recs = prefs.head(5)['item_y'].values
+  
+  return recs
+
+# Get recommendations for user 1
+print(get_recommendations(1))
